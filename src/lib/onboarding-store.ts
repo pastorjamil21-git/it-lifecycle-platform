@@ -1,3 +1,5 @@
+import { prisma } from "@/lib/prisma";
+
 export type OnboardingStatus = "Pending" | "Approved" | "Provisioning";
 
 export type OnboardingRequest = {
@@ -10,21 +12,40 @@ export type OnboardingRequest = {
   status: OnboardingStatus;
 };
 
-const requests: OnboardingRequest[] = [];
-
-export function listRequests() {
-  return [...requests].sort((a, b) => a.startDate.localeCompare(b.startDate));
+export async function listRequests() {
+  return prisma.onboardingRequest.findMany({
+    orderBy: { startDate: "asc" },
+  });
 }
 
-export function createRequest(input: Omit<OnboardingRequest, "id" | "status">) {
-  const request = { ...input, id: crypto.randomUUID(), status: "Pending" as const };
-  requests.push(request);
-  return request;
+export async function createRequest(input: Omit<OnboardingRequest, "id" | "status">) {
+  return prisma.onboardingRequest.create({
+    data: {
+      ...input,
+      startDate: new Date(input.startDate),
+    },
+  });
 }
 
-export function approveRequest(id: string) {
-  const request = requests.find((item) => item.id === id);
-  if (!request) return undefined;
-  request.status = "Approved";
-  return request;
+export async function approveRequest(id: string) {
+  return prisma.$transaction(async (transaction) => {
+    const request = await transaction.onboardingRequest.findUnique({ where: { id } });
+    if (!request) return undefined;
+
+    const approvedRequest = await transaction.onboardingRequest.update({
+      where: { id },
+      data: { status: "Approved" },
+    });
+
+    await transaction.auditLog.create({
+      data: {
+        action: "Approved",
+        entity: "OnboardingRequest",
+        entityId: id,
+        details: `Onboarding request for ${request.name} approved.`,
+      },
+    });
+
+    return approvedRequest;
+  });
 }

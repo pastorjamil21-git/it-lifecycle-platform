@@ -16,3 +16,12 @@ model OnboardingRequest {
   status     String           @default("Pending")
   createdAt  DateTime         @default(now())
 }
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String
+  details   String?
+  createdAt DateTime @default(now())
+}
