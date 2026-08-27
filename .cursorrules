@@ -1,0 +1,15 @@
+# Project: IT Lifecycle & Service Management Platform
+
+## Tech Stack
+- Framework: Next.js 14+ (App Router)
+- Language: TypeScript (Strict mode)
+- Styling: Tailwind CSS + Shadcn UI
+- Database & ORM: PostgreSQL + Prisma ORM
+- State Engine: State machine pattern for Request Lifecycle
+- Automation Bridge: Webhooks to n8n
+
+## Architectural Guidelines
+1. Do not invent new API endpoints or database fields without updating `prisma/schema.prisma` first.
+2. Every lifecycle change (Onboarding/Offboarding/Access) MUST write an entry to `AuditLog`.
+3. Separate IT Admin actions from HR/User actions using Role-Based Access Control (RBAC).
+4. Do not hardcode external API calls inside core routes; emit webhooks for n8n orchestration.
