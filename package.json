@@ -1,0 +1,22 @@
+{
+  "dependencies": {
+    "@prisma/client": "^7.10.0",
+    "next": "^16.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.0",
+    "@types/node": "^26.4.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "prisma": "^7.10.0",
+    "tailwindcss": "^4.1.0",
+    "typescript": "^5.0.0"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "postinstall": "prisma skills sync || exit 0"
+  }
+}
