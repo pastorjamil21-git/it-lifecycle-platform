@@ -7,14 +7,14 @@ datasource db {
 }
 
 model OnboardingRequest {
-  id         String           @id @default(cuid())
+  id         String   @id @default(cuid())
   name       String
   title      String
   department String
   startDate  DateTime
   manager    String
-  status     String           @default("Pending")
-  createdAt  DateTime         @default(now())
+  status     String   @default("Pending")
+  createdAt  DateTime @default(now())
 }
 
 model AuditLog {
@@ -24,4 +24,41 @@ model AuditLog {
   entityId  String
   details   String?
   createdAt DateTime @default(now())
+}
+
+model HardwareAsset {
+  id           String              @id @default(cuid())
+  serialNumber String              @unique
+  modelName    String
+  status       String              @default("AVAILABLE")
+  createdAt    DateTime            @default(now())
+  assignments  LicenseAssignment[]
+}
+
+model License {
+  id             String              @id @default(cuid())
+  softwareName   String
+  totalSeats     Int
+  availableSeats Int
+  createdAt      DateTime            @default(now())
+  assignments    LicenseAssignment[]
+}
+
+model User {
+  id          String              @id @default(cuid())
+  name        String
+  email       String              @unique
+  createdAt   DateTime            @default(now())
+  assignments LicenseAssignment[]
+}
+
+model LicenseAssignment {
+  id              String         @id @default(cuid())
+  license         License        @relation(fields: [licenseId], references: [id])
+  licenseId       String
+  user            User           @relation(fields: [userId], references: [id])
+  userId          String
+  hardwareAsset   HardwareAsset? @relation(fields: [hardwareAssetId], references: [id])
+  hardwareAssetId String?
+  assignedAt      DateTime       @default(now())
 }

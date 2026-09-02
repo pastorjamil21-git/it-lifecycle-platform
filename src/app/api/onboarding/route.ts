@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
-import { createRequest, listRequests } from "@/lib/onboarding-store";
+import { prisma } from "@/lib/prisma";
+
 
 export async function GET() {
-  return NextResponse.json(await listRequests());
+  const requests = await prisma.onboardingRequest.findMany({
+    orderBy: { createdAt: 'desc' },
+  });
+  return NextResponse.json(requests);
 }
 
 export async function POST(request: Request) {
@@ -18,10 +22,29 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Start date is invalid." }, { status: 400 });
   }
 
-  const onboardingRequest = await createRequest({
-    name: name.trim(), title: title.trim(), department: department.trim(),
-    startDate: parsedStartDate.toISOString(), manager: manager.trim(),
+  const onboardingRequest = await prisma.$transaction(async (tx) => {
+  const request = await tx.onboardingRequest.create({
+    data: {
+        name: name.trim(),
+        title: title.trim(),
+        department: department.trim(),
+        startDate: parsedStartDate.toISOString(),
+        manager: manager.trim(),
+        status: 'Pending',
+    },
   });
+
+  await tx.auditLog.create({
+    data: {
+      action: 'CREATED',
+      entity: 'OnboardingRequest',
+      entityId: request.id,
+      details: `Onboarding requested for ${name.trim()}`,
+    },
+  });
+
+  return request;
+});
 
   return NextResponse.json(onboardingRequest, { status: 201 });
 }
