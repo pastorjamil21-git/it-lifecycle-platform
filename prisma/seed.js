@@ -1,6 +1,7 @@
 const path = require('path');
 const { PrismaClient } = require('@prisma/client');
 const { PrismaBetterSqlite3 } = require('@prisma/adapter-better-sqlite3');
+const bcrypt = require('bcryptjs');
 
 // Adapter takes a config object with a `url`, not a Database instance
 const dbPath = path.resolve(__dirname, 'dev.db');
@@ -15,6 +16,16 @@ async function main() {
   await prisma.license.deleteMany();
   await prisma.onboardingRequest.deleteMany();
   await prisma.user.deleteMany();
+
+  const hashedPassword = await bcrypt.hash('1amYourpopoy@21', 10);
+  await prisma.user.create({
+    data: {
+      name: 'Admin User',
+      email: 'pastor.jamil21@gmail.com',
+      password: hashedPassword,
+      role: 'ADMIN',
+    },
+  });
 
   await prisma.hardwareAsset.createMany({
     data: [
