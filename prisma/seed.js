@@ -6,7 +6,6 @@ const bcrypt = require('bcryptjs');
 // Adapter takes a config object with a `url`, not a Database instance
 const dbPath = path.resolve(__dirname, 'dev.db');
 const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` });
-
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
@@ -17,13 +16,43 @@ async function main() {
   await prisma.onboardingRequest.deleteMany();
   await prisma.user.deleteMany();
 
-  const hashedPassword = await bcrypt.hash('1amYourpopoy@21', 10);
+  const adminPassword = await bcrypt.hash('1amYourpopoy@21', 10);
   await prisma.user.create({
     data: {
       name: 'Admin User',
       email: 'pastor.jamil21@gmail.com',
-      password: hashedPassword,
+      password: adminPassword,
       role: 'ADMIN',
+    },
+  });
+
+  const itTechPassword = await bcrypt.hash('ITTech123!', 10);
+  await prisma.user.create({
+    data: {
+      name: 'IT Tech User',
+      email: 'ittech@yourcompany.com',
+      password: itTechPassword,
+      role: 'IT_TECH',
+    },
+  });
+
+  const hrPassword = await bcrypt.hash('HRManager123!', 10);
+  await prisma.user.create({
+    data: {
+      name: 'HR Manager User',
+      email: 'hrmanager@yourcompany.com',
+      password: hrPassword,
+      role: 'HR_MANAGER',
+    },
+  });
+
+  const employeePassword = await bcrypt.hash('Employee123!', 10);
+  await prisma.user.create({
+    data: {
+      name: 'Employee User',
+      email: 'employee@yourcompany.com',
+      password: employeePassword,
+      role: 'EMPLOYEE',
     },
   });
 
