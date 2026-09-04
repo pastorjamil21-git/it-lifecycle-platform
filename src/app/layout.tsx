@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import AuthSessionProvider from "@/components/auth/SessionProvider";
 
 export const metadata: Metadata = {
   title: "Lifecycle | Onboarding",
@@ -7,5 +8,11 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body>{children}</body></html>;
+  return (
+    <html lang="en">
+      <body>
+        <AuthSessionProvider>{children}</AuthSessionProvider>
+      </body>
+    </html>
+  );
 }
