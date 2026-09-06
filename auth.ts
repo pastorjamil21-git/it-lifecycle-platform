@@ -47,6 +47,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           Google({
             clientId: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            allowDangerousEmailAccountLinking: true,
           }),
         ]
       : []),
@@ -58,6 +59,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             clientId: process.env.MICROSOFT_CLIENT_ID,
             clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
             issuer: process.env.MICROSOFT_ISSUER,
+            allowDangerousEmailAccountLinking: true,
           }),
         ]
       : []),
