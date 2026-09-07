@@ -2,6 +2,7 @@ import LifecycleDashboard from "@/components/dashboard/LifecycleDashboard";
 import OnboardingForm from "@/components/onboarding/OnboardingForm";
 import UserMenu from "@/components/auth/UserMenu";
 import AuditLogViewer from "@/components/dashboard/AuditLogViewer";
+import InventoryManager from "@/components/dashboard/InventoryManager";
 
 export default function Home() {
   return (
@@ -18,6 +19,13 @@ export default function Home() {
         <div className="space-y-14">
           <OnboardingForm />
           <LifecycleDashboard />
+          <section>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">IT inventory</p>
+            <h2 className="mt-2 text-2xl font-semibold text-slate-900">Device & license assignments</h2>
+            <div className="mt-4">
+              <InventoryManager />
+            </div>
+          </section>
           <section>
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Audit trail</p>
             <h2 className="mt-2 text-2xl font-semibold text-slate-900">Recent activity</h2>
