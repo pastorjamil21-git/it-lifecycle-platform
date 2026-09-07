@@ -1,5 +1,7 @@
 import LifecycleDashboard from "@/components/dashboard/LifecycleDashboard";
 import OnboardingForm from "@/components/onboarding/OnboardingForm";
+import OffboardingForm from "@/components/offboarding/OffboardingForm";
+import OffboardingDashboard from "@/components/offboarding/OffboardingDashboard";
 import UserMenu from "@/components/auth/UserMenu";
 import AuditLogViewer from "@/components/dashboard/AuditLogViewer";
 import InventoryManager from "@/components/dashboard/InventoryManager";
@@ -19,6 +21,8 @@ export default function Home() {
         <div className="space-y-14">
           <OnboardingForm />
           <LifecycleDashboard />
+          <OffboardingForm />
+          <OffboardingDashboard />
           <section>
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">IT inventory</p>
             <h2 className="mt-2 text-2xl font-semibold text-slate-900">Device & license assignments</h2>

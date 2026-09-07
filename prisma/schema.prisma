@@ -17,6 +17,17 @@ model OnboardingRequest {
   createdAt  DateTime @default(now())
 }
 
+model OffboardingRequest {
+  id             String   @id @default(cuid())
+  name           String
+  title          String
+  department     String
+  lastWorkingDay DateTime
+  manager        String
+  status         String   @default("Pending")
+  createdAt      DateTime @default(now())
+}
+
 model AuditLog {
   id        String   @id @default(cuid())
   action    String
@@ -56,6 +67,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
 }
+
 model Account {
   id                String  @id @default(cuid())
   userId            String
