@@ -1,31 +1,25 @@
 "use client";
-
 import { FormEvent, useState } from "react";
-
 type FormValues = {
   name: string;
+  email: string;
   title: string;
   department: string;
   startDate: string;
   manager: string;
 };
-
-const initialValues: FormValues = { name: "", title: "", department: "", startDate: "", manager: "" };
-
+const initialValues: FormValues = { name: "", email: "", title: "", department: "", startDate: "", manager: "" };
 export default function OnboardingForm() {
   const [values, setValues] = useState(initialValues);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
-
   function updateValue(field: keyof FormValues, value: string) {
     setValues((current) => ({ ...current, [field]: value }));
   }
-
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitting(true);
     setMessage("");
-
     try {
       const response = await fetch("/api/onboarding", {
         method: "POST",
@@ -42,7 +36,6 @@ export default function OnboardingForm() {
       setSubmitting(false);
     }
   }
-
   return (
     <section className="border-t-4 border-amber-400 bg-white p-6 shadow-sm sm:p-8" aria-labelledby="new-request-heading">
       <div className="mb-7">
@@ -52,9 +45,17 @@ export default function OnboardingForm() {
       </div>
       <form onSubmit={submit} className="space-y-5">
         <div className="grid gap-5 sm:grid-cols-2">
-          {(["name", "title", "department", "manager"] as const).map((field) => (
+          <label className="space-y-2 text-sm font-semibold text-slate-700">
+            <span>Full name</span>
+            <input required value={values.name} onChange={(event) => updateValue("name", event.target.value)} className="w-full border border-slate-200 bg-slate-50 px-3 py-2.5 font-normal text-slate-900 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-100" />
+          </label>
+          <label className="space-y-2 text-sm font-semibold text-slate-700">
+            <span>Work email</span>
+            <input required type="email" value={values.email} onChange={(event) => updateValue("email", event.target.value)} className="w-full border border-slate-200 bg-slate-50 px-3 py-2.5 font-normal text-slate-900 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-100" />
+          </label>
+          {(["title", "department", "manager"] as const).map((field) => (
             <label key={field} className="space-y-2 text-sm font-semibold text-slate-700">
-              <span>{field === "name" ? "Full name" : field[0].toUpperCase() + field.slice(1)}</span>
+              <span>{field[0].toUpperCase() + field.slice(1)}</span>
               <input required value={values[field]} onChange={(event) => updateValue(field, event.target.value)} className="w-full border border-slate-200 bg-slate-50 px-3 py-2.5 font-normal text-slate-900 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-100" />
             </label>
           ))}

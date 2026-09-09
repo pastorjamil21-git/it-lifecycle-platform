@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "../../../../../../auth";
+import bcrypt from "bcryptjs";
+import crypto from "crypto";
 
 const ALLOWED_ROLES = ["ADMIN", "IT_TECH", "HR_MANAGER"];
+
+function generateTempPassword() {
+  return crypto.randomBytes(9).toString("base64").replace(/[+/=]/g, "9") + "!A1";
+}
 
 export async function POST(
   _request: Request,
@@ -21,37 +27,58 @@ export async function POST(
 
   try {
     const { id } = await params;
-    const onboardingRequest = await prisma.$transaction(async (tx) => {
+
+    const existing = await prisma.onboardingRequest.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: "Request not found." }, { status: 404 });
+    }
+    if (!existing.email) {
+      return NextResponse.json(
+        { error: "This request has no email on file and cannot be approved into an account." },
+        { status: 400 }
+      );
+    }
+
+    let tempPassword: string | null = null;
+
+    const result = await prisma.$transaction(async (tx) => {
+      let user = await tx.user.findUnique({ where: { email: existing.email! } });
+
+      if (!user) {
+        tempPassword = generateTempPassword();
+        const hashedPassword = await bcrypt.hash(tempPassword, 10);
+        user = await tx.user.create({
+          data: {
+            name: existing.name,
+            email: existing.email!,
+            password: hashedPassword,
+            role: "EMPLOYEE",
+            isActive: true,
+          },
+        });
+      }
+
       const updated = await tx.onboardingRequest.update({
         where: { id },
-        data: { status: "Approved" },
+        data: { status: "Approved", userId: user.id },
       });
+
       await tx.auditLog.create({
         data: {
           action: "APPROVED",
           entity: "OnboardingRequest",
           entityId: id,
-          details: `Onboarding request approved for ${updated.name} by ${session.user?.email}`,
+          details: `Onboarding request approved for ${updated.name}${tempPassword ? " (account created)" : " (existing account linked)"} by ${session.user?.email}`,
         },
       });
-      return updated;
+
+      return { onboardingRequest: updated, userId: user.id };
     });
-    const webhookUrl = process.env.N8N_WEBHOOK_URL;
-    if (webhookUrl) {
-      try {
-        const webhookResponse = await fetch(webhookUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(onboardingRequest),
-        });
-        if (!webhookResponse.ok) {
-          console.error(`N8N webhook returned ${webhookResponse.status}`);
-        }
-      } catch (error) {
-        console.error("Unable to send onboarding approval webhook:", error);
-      }
-    }
-    return NextResponse.json(onboardingRequest);
+
+    return NextResponse.json({
+      ...result.onboardingRequest,
+      tempPassword,
+    });
   } catch (error) {
     console.error("Failed to approve request:", error);
     return NextResponse.json(

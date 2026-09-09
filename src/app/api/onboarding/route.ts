@@ -9,7 +9,7 @@ export async function GET() {
   }
 
   const requests = await prisma.onboardingRequest.findMany({
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: "desc" },
   });
   return NextResponse.json(requests);
 }
@@ -21,34 +21,52 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { name, title, department, startDate, manager } = body;
-  if (![name, title, department, startDate, manager].every((value) => typeof value === "string" && value.trim())) {
-    return NextResponse.json({ error: "All onboarding fields are required." }, { status: 400 });
+  const { name, email, title, department, startDate, manager } = body;
+  if (
+    ![name, email, title, department, startDate, manager].every(
+      (value) => typeof value === "string" && value.trim()
+    )
+  ) {
+    return NextResponse.json(
+      { error: "All onboarding fields are required." },
+      { status: 400 }
+    );
   }
   const parsedStartDate = new Date(startDate);
   if (Number.isNaN(parsedStartDate.getTime())) {
     return NextResponse.json({ error: "Start date is invalid." }, { status: 400 });
   }
+
+  const existingUser = await prisma.user.findUnique({ where: { email: email.trim() } });
+  if (existingUser) {
+    return NextResponse.json(
+      { error: "A user with this email already exists." },
+      { status: 400 }
+    );
+  }
+
   const onboardingRequest = await prisma.$transaction(async (tx) => {
     const created = await tx.onboardingRequest.create({
       data: {
         name: name.trim(),
+        email: email.trim(),
         title: title.trim(),
         department: department.trim(),
         startDate: parsedStartDate.toISOString(),
         manager: manager.trim(),
-        status: 'Pending',
+        status: "Pending",
       },
     });
     await tx.auditLog.create({
       data: {
-        action: 'CREATED',
-        entity: 'OnboardingRequest',
+        action: "CREATED",
+        entity: "OnboardingRequest",
         entityId: created.id,
         details: `Onboarding requested for ${name.trim()} by ${session.user?.email}`,
       },
     });
     return created;
   });
+
   return NextResponse.json(onboardingRequest, { status: 201 });
 }

@@ -14,6 +14,9 @@ model OnboardingRequest {
   startDate  DateTime
   manager    String
   status     String   @default("Pending")
+  email      String?
+  userId     String?
+  user       User?    @relation("OnboardingUser", fields: [userId], references: [id])
   createdAt  DateTime @default(now())
 }
 
@@ -25,6 +28,8 @@ model OffboardingRequest {
   lastWorkingDay DateTime
   manager        String
   status         String   @default("Pending")
+  userId         String?
+  user           User?    @relation("OffboardingUser", fields: [userId], references: [id])
   createdAt      DateTime @default(now())
 }
 
@@ -56,16 +61,19 @@ model License {
 }
 
 model User {
-  id            String              @id @default(cuid())
-  name          String
-  email         String              @unique
-  emailVerified DateTime?
-  password      String?
-  role          String              @default("EMPLOYEE")
-  createdAt     DateTime            @default(now())
-  assignments   LicenseAssignment[]
-  accounts      Account[]
-  sessions      Session[]
+  id                   String                @id @default(cuid())
+  name                 String
+  email                String                @unique
+  emailVerified        DateTime?
+  password             String?
+  role                 String                @default("EMPLOYEE")
+  isActive             Boolean               @default(true)
+  createdAt            DateTime              @default(now())
+  assignments          LicenseAssignment[]
+  accounts             Account[]
+  sessions             Session[]
+  onboardingRequests   OnboardingRequest[]   @relation("OnboardingUser")
+  offboardingRequests  OffboardingRequest[]  @relation("OffboardingUser")
 }
 
 model Account {
