@@ -21,9 +21,10 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { name, title, department, lastWorkingDay, manager } = body;
+  const { userId, title, department, lastWorkingDay, manager } = body;
   if (
-    ![name, title, department, lastWorkingDay, manager].every(
+    !userId ||
+    ![title, department, lastWorkingDay, manager].every(
       (value) => typeof value === "string" && value.trim()
     )
   ) {
@@ -37,10 +38,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Last working day is invalid." }, { status: 400 });
   }
 
+  const targetUser = await prisma.user.findUnique({ where: { id: userId } });
+  if (!targetUser) {
+    return NextResponse.json({ error: "Selected employee not found." }, { status: 400 });
+  }
+
   const offboardingRequest = await prisma.$transaction(async (tx) => {
     const created = await tx.offboardingRequest.create({
       data: {
-        name: name.trim(),
+        name: targetUser.name,
+        userId: targetUser.id,
         title: title.trim(),
         department: department.trim(),
         lastWorkingDay: parsedLastDay.toISOString(),
@@ -53,7 +60,7 @@ export async function POST(request: Request) {
         action: "CREATED",
         entity: "OffboardingRequest",
         entityId: created.id,
-        details: `Offboarding requested for ${name.trim()} by ${session.user?.email}`,
+        details: `Offboarding requested for ${targetUser.name} by ${session.user?.email}`,
       },
     });
     return created;

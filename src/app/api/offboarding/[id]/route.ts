@@ -24,21 +24,60 @@ export async function PATCH(
     if (!ALLOWED_STATUSES.includes(status)) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
+
     const updatedRequest = await prisma.$transaction(async (tx) => {
+      const existing = await tx.offboardingRequest.findUnique({ where: { id } });
+      if (!existing) throw new Error("Offboarding request not found.");
+
+      let revokedCount = 0;
+
+      if (status === "Revoking" && existing.userId) {
+        const assignments = await tx.licenseAssignment.findMany({
+          where: { userId: existing.userId },
+          include: { license: true, hardwareAsset: true },
+        });
+
+        for (const assignment of assignments) {
+          await tx.license.update({
+            where: { id: assignment.licenseId },
+            data: { availableSeats: { increment: 1 } },
+          });
+          if (assignment.hardwareAssetId) {
+            await tx.hardwareAsset.update({
+              where: { id: assignment.hardwareAssetId },
+              data: { status: "AVAILABLE" },
+            });
+          }
+          await tx.licenseAssignment.delete({ where: { id: assignment.id } });
+          revokedCount++;
+        }
+
+        await tx.user.update({
+          where: { id: existing.userId },
+          data: { isActive: false },
+        });
+      }
+
       const updated = await tx.offboardingRequest.update({
         where: { id },
         data: { status },
       });
+
       await tx.auditLog.create({
         data: {
           action: status.toUpperCase(),
           entity: "OffboardingRequest",
           entityId: id,
-          details: `Offboarding request moved to ${status} for ${updated.name} by ${session.user?.email}`,
+          details:
+            status === "Revoking"
+              ? `Access revoked for ${updated.name}: ${revokedCount} assignment(s) reclaimed, account deactivated, by ${session.user?.email}`
+              : `Offboarding request moved to ${status} for ${updated.name} by ${session.user?.email}`,
         },
       });
+
       return updated;
     });
+
     return NextResponse.json(updatedRequest);
   } catch (error) {
     console.error("Failed to update status:", error);

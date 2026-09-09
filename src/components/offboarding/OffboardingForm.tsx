@@ -1,17 +1,25 @@
 "use client";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
+type UserOption = { id: string; name: string; email: string; role: string };
 type FormValues = {
-  name: string;
+  userId: string;
   title: string;
   department: string;
   lastWorkingDay: string;
   manager: string;
 };
-const initialValues: FormValues = { name: "", title: "", department: "", lastWorkingDay: "", manager: "" };
+const initialValues: FormValues = { userId: "", title: "", department: "", lastWorkingDay: "", manager: "" };
 export default function OffboardingForm() {
   const [values, setValues] = useState(initialValues);
+  const [users, setUsers] = useState<UserOption[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
+  useEffect(() => {
+    fetch("/api/users")
+      .then((res) => res.json())
+      .then((data) => setUsers(Array.isArray(data) ? data : []))
+      .catch(() => setUsers([]));
+  }, []);
   function updateValue(field: keyof FormValues, value: string) {
     setValues((current) => ({ ...current, [field]: value }));
   }
@@ -44,9 +52,18 @@ export default function OffboardingForm() {
       </div>
       <form onSubmit={submit} className="space-y-5">
         <div className="grid gap-5 sm:grid-cols-2">
-          {(["name", "title", "department", "manager"] as const).map((field) => (
+          <label className="space-y-2 text-sm font-semibold text-slate-700">
+            <span>Employee</span>
+            <select required value={values.userId} onChange={(event) => updateValue("userId", event.target.value)} className="w-full border border-slate-200 bg-slate-50 px-3 py-2.5 font-normal text-slate-900 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100">
+              <option value="">Select an employee</option>
+              {users.map((u) => (
+                <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
+              ))}
+            </select>
+          </label>
+          {(["title", "department", "manager"] as const).map((field) => (
             <label key={field} className="space-y-2 text-sm font-semibold text-slate-700">
-              <span>{field === "name" ? "Full name" : field[0].toUpperCase() + field.slice(1)}</span>
+              <span>{field[0].toUpperCase() + field.slice(1)}</span>
               <input required value={values[field]} onChange={(event) => updateValue(field, event.target.value)} className="w-full border border-slate-200 bg-slate-50 px-3 py-2.5 font-normal text-slate-900 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100" />
             </label>
           ))}
