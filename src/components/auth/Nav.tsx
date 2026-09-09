@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { href: "/offboarding", label: "Offboarding", roles: ["ADMIN", "IT_TECH", "HR_MANAGER"] },
   { href: "/inventory", label: "Inventory", roles: ["ADMIN", "IT_TECH"] },
   { href: "/audit", label: "Audit trail", roles: ["ADMIN", "IT_TECH", "HR_MANAGER"] },
+  { href: "/users", label: "Users", roles: ["ADMIN"] },
 ];
 
 export default function Nav() {
